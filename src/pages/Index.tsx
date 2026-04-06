@@ -71,6 +71,14 @@ export default function Index() {
     setAuthed(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("cep-token");
+    localStorage.removeItem("cep-user");
+    setCurrentUser(null);
+    setAuthed(false);
+    setSection("discover");
+  };
+
   if (!onboarded) {
     return <Onboarding onDone={handleOnboardingDone} />;
   }
@@ -155,7 +163,7 @@ export default function Index() {
         )}
 
         {section === "settings" && (
-          <SettingsSection />
+          <SettingsSection onLogout={handleLogout} />
         )}
 
         {section === "support" && (

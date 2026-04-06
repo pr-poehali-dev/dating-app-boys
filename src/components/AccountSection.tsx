@@ -106,7 +106,11 @@ export function ProfileSection({ likedProfiles, currentUser }: ProfileSectionPro
   );
 }
 
-export function SettingsSection() {
+interface SettingsSectionProps {
+  onLogout: () => void;
+}
+
+export function SettingsSection({ onLogout }: SettingsSectionProps) {
   return (
     <div className="h-full overflow-y-auto p-4 animate-fade-in">
       <div className="max-w-2xl mx-auto space-y-3">
@@ -161,7 +165,7 @@ export function SettingsSection() {
             { label: "Блокировки", icon: "Ban", color: "text-muted-foreground", desc: "Заблокированные пользователи" },
             { label: "Удалить аккаунт", icon: "Trash2", color: "text-destructive", desc: "Это действие необратимо" },
           ].map((item, i) => (
-            <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-secondary/30 transition-colors">
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-secondary/30 transition-colors" onClick={item.label === "Удалить аккаунт" ? undefined : undefined}>
               <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
                 <Icon name={item.icon as "ShieldCheck"} size={16} className={item.color} />
               </div>
@@ -173,6 +177,20 @@ export function SettingsSection() {
             </div>
           ))}
         </div>
+
+        {/* Logout */}
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-3.5 bg-card rounded-2xl card-glow hover:bg-secondary/30 transition-colors cursor-pointer"
+        >
+          <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
+            <Icon name="LogOut" size={16} className="text-muted-foreground" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-medium">Выйти из аккаунта</p>
+            <p className="text-xs text-muted-foreground">Сессия будет завершена</p>
+          </div>
+        </button>
       </div>
     </div>
   );
