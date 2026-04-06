@@ -45,6 +45,18 @@ export default function Index() {
   const [heartedId, setHeartedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // для открытия профиля из чата
+  const [viewProfileId, setViewProfileId] = useState<number | null>(null);
+  const [viewProfileName, setViewProfileName] = useState("");
+  const [viewProfileAvatar, setViewProfileAvatar] = useState("");
+
+  const handleViewProfile = (userId: number, name: string, avatarUrl: string) => {
+    setViewProfileId(userId);
+    setViewProfileName(name);
+    setViewProfileAvatar(avatarUrl);
+    setSection("discover");
+  };
+
   // для открытия чата из MatchesSection
   const [openChatUserId, setOpenChatUserId] = useState<number | null>(null);
   const [openChatName, setOpenChatName] = useState("");
@@ -154,6 +166,10 @@ export default function Index() {
             setSelectedInterests={setSelectedInterests}
             setSection={setSection}
             onOpenChat={handleOpenChat}
+            viewProfileId={viewProfileId}
+            viewProfileName={viewProfileName}
+            viewProfileAvatar={viewProfileAvatar}
+            onClearViewProfile={() => setViewProfileId(null)}
           />
         )}
 
@@ -171,6 +187,7 @@ export default function Index() {
             initialChatName={openChatName}
             initialChatAvatar={openChatAvatar}
             onClearInitial={() => setOpenChatUserId(null)}
+            onViewProfile={handleViewProfile}
           />
         )}
 

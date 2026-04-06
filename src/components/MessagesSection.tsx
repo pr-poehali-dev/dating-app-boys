@@ -115,9 +115,10 @@ interface MessagesSectionProps {
   initialChatName?: string;
   initialChatAvatar?: string;
   onClearInitial?: () => void;
+  onViewProfile?: (userId: number, name: string, avatarUrl: string) => void;
 }
 
-export function MessagesSection({ initialChatUserId, initialChatName, initialChatAvatar, onClearInitial }: MessagesSectionProps) {
+export function MessagesSection({ initialChatUserId, initialChatName, initialChatAvatar, onClearInitial, onViewProfile }: MessagesSectionProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -200,16 +201,23 @@ export function MessagesSection({ initialChatUserId, initialChatName, initialCha
           <button onClick={() => { setActiveChat(null); loadChats(); }} className="text-muted-foreground">
             <Icon name="ArrowLeft" size={20} />
           </button>
-          <div className="relative">
+          <button
+            className="relative flex-shrink-0"
+            onClick={() => onViewProfile?.(activeChat.user_id, activeChat.name, activeChat.avatar_url)}
+          >
             <Avatar className="w-9 h-9">
               <AvatarFallback>{activeChat.name[0]}</AvatarFallback>
               <img src={getAvatar(activeChat.avatar_url, activeChat.name)} alt={activeChat.name} className="w-full h-full object-cover rounded-full" />
             </Avatar>
-          </div>
-          <div className="flex-1">
+          </button>
+          <button
+            className="flex-1 text-left"
+            onClick={() => onViewProfile?.(activeChat.user_id, activeChat.name, activeChat.avatar_url)}
+          >
             <p className="font-semibold text-sm">{activeChat.name}</p>
-            <p className="text-xs text-muted-foreground">{activeChat.city || "в приложении"}</p>
-          </div>
+            <p className="text-xs text-muted-foreground">{activeChat.city || "нажми чтобы открыть профиль"}</p>
+          </button>
+          <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">

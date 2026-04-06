@@ -25,6 +25,10 @@ interface DiscoverSectionProps {
   setSelectedInterests: (v: string[]) => void;
   setSection: (s: Section) => void;
   onOpenChat: (userId: number, name: string, avatarUrl: string) => void;
+  viewProfileId?: number | null;
+  viewProfileName?: string;
+  viewProfileAvatar?: string;
+  onClearViewProfile?: () => void;
 }
 
 export default function DiscoverSection({
@@ -44,9 +48,37 @@ export default function DiscoverSection({
   setSelectedInterests,
   setSection,
   onOpenChat,
+  viewProfileId,
+  viewProfileName,
+  viewProfileAvatar,
+  onClearViewProfile,
 }: DiscoverSectionProps) {
   const [allProfiles, setAllProfiles] = useState<Profile[]>(PROFILES);
   const [distances, setDistances] = useState<Record<number, number>>({});
+
+  // открыть профиль из чата
+  useEffect(() => {
+    if (!viewProfileId) return;
+    const existing = allProfiles.find(p => p.id === viewProfileId);
+    if (existing) {
+      setSelectedProfile(existing);
+    } else {
+      // создаём минимальный профиль из переданных данных
+      setSelectedProfile({
+        id: viewProfileId,
+        name: viewProfileName || "",
+        age: 0,
+        city: "",
+        about: "",
+        interests: [],
+        img: viewProfileAvatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(viewProfileName || "user")}&backgroundColor=ffb3ba`,
+        verified: false,
+        online: false,
+        match: 0,
+      });
+    }
+    onClearViewProfile?.();
+  }, [viewProfileId]);
 
   const loadUsers = (token: string) => {
     fetch(`${USERS_URL}?token=${token}`)
@@ -69,7 +101,10 @@ export default function DiscoverSection({
             online: u.online,
             match: u.match,
           }));
-          setAllProfiles([...mapped, ...PROFILES]);
+          // моки только если нет реальных пользователей
+          const realIds = new Set(mapped.map(m => m.id));
+          const mockFallback = PROFILES.filter(p => !realIds.has(p.id));
+          setAllProfiles(mapped.length > 0 ? [...mapped, ...mockFallback] : PROFILES);
           const dist: Record<number, number> = {};
           data.users.forEach((u: { id: number; distance: number | null }) => {
             if (u.distance !== null && u.distance !== undefined) dist[u.id] = u.distance;
