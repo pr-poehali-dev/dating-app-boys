@@ -92,16 +92,18 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        const base64 = reader.result as string;
+        const dataUrl = reader.result as string;
+        const base64 = dataUrl.split(",")[1];
         const res = await fetch(UPLOAD_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ file: base64, type: file.type }),
+          body: JSON.stringify({ image: base64, contentType: file.type }),
         });
         const data = await res.json();
         if (data.ok) setProfile(prev => prev ? { ...prev, avatar_url: data.url } : prev);
       } finally {
         setUploadingPhoto(false);
+        e.target.value = "";
       }
     };
     reader.readAsDataURL(file);
