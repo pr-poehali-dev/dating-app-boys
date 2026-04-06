@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,14 +7,141 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { INTERESTS, type Section } from "@/components/data";
 
+const PROFILE_URL = "https://functions.poehali.dev/cd62eb2f-9ab4-4319-abaf-48444ad46033";
+
+interface UserProfile {
+  id: number; name: string; email: string;
+  city: string; about: string; interests: string; age: number;
+}
+
 interface ProfileSectionProps {
   likedProfiles: number[];
   currentUser: { id: number; name: string; email: string } | null;
+  onProfileUpdated: (user: { id: number; name: string; email: string }) => void;
 }
 
-export function ProfileSection({ likedProfiles, currentUser }: ProfileSectionProps) {
+export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }: ProfileSectionProps) {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const [editName, setEditName] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editAbout, setEditAbout] = useState("");
+  const [editAge, setEditAge] = useState("");
+  const [editInterests, setEditInterests] = useState<string[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("cep-token");
+    if (!token) return;
+    fetch(PROFILE_URL, { headers: { "Authorization": `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => { if (data.id) setProfile(data); })
+      .catch(() => {});
+  }, []);
+
+  const openEdit = () => {
+    if (!profile) return;
+    setEditName(profile.name);
+    setEditCity(profile.city);
+    setEditAbout(profile.about);
+    setEditAge(profile.age ? String(profile.age) : "");
+    setEditInterests(profile.interests ? profile.interests.split(",").map(s => s.trim()).filter(Boolean) : []);
+    setSaveError("");
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    setSaveError("");
+    if (!editName.trim()) { setSaveError("Имя не может быть пустым"); return; }
+    setSaving(true);
+    const token = localStorage.getItem("cep-token");
+    try {
+      const res = await fetch(PROFILE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          name: editName.trim(), city: editCity.trim(),
+          about: editAbout.trim(), age: parseInt(editAge) || 0,
+          interests: editInterests.join(", ")
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) { setSaveError(data.error || "Ошибка сохранения"); return; }
+      setProfile(data.user);
+      onProfileUpdated({ id: data.user.id, name: data.user.name, email: data.user.email });
+      const saved = { ...JSON.parse(localStorage.getItem("cep-user") || "{}"), name: data.user.name };
+      localStorage.setItem("cep-user", JSON.stringify(saved));
+      setEditing(false);
+    } catch {
+      setSaveError("Нет соединения. Попробуй ещё раз.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayProfile = profile ?? { name: currentUser?.name ?? "", email: currentUser?.email ?? "", city: "", about: "", interests: "", age: 0 };
+  const activeInterests = displayProfile.interests ? displayProfile.interests.split(",").map(s => s.trim()).filter(Boolean) : [];
+
   return (
     <div className="h-full overflow-y-auto animate-fade-in">
+
+      {/* Edit modal */}
+      {editing && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4" onClick={() => setEditing(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-card w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-lg">Редактировать профиль</h3>
+              <button onClick={() => setEditing(false)} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
+                <Icon name="X" size={15} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Имя</label>
+                <Input value={editName} onChange={e => setEditName(e.target.value)} className="bg-secondary border-0 rounded-xl" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Город</label>
+                  <Input value={editCity} onChange={e => setEditCity(e.target.value)} placeholder="Москва" className="bg-secondary border-0 rounded-xl" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Возраст</label>
+                  <Input value={editAge} onChange={e => setEditAge(e.target.value)} placeholder="25" type="number" className="bg-secondary border-0 rounded-xl" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">О себе</label>
+                <Textarea value={editAbout} onChange={e => setEditAbout(e.target.value)} placeholder="Расскажи о себе..." className="bg-secondary border-0 rounded-xl resize-none" rows={3} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-2 block">Интересы</label>
+                <div className="flex flex-wrap gap-2">
+                  {INTERESTS.map(i => (
+                    <button key={i} onClick={() => setEditInterests(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
+                      className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all",
+                        editInterests.includes(i) ? "gradient-spark text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
+                      )}>
+                      {i}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {saveError && <p className="text-sm text-destructive bg-destructive/10 rounded-xl px-3 py-2">{saveError}</p>}
+
+              <Button onClick={handleSave} disabled={saving} className="w-full gradient-spark border-0 text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-60" style={{ height: 48 }}>
+                {saving ? "Сохраняем..." : "Сохранить изменения"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-2xl mx-auto pb-6">
         <div className="relative">
           <div className="h-44 gradient-spark opacity-20 absolute inset-x-0 top-0" />
@@ -21,7 +149,7 @@ export function ProfileSection({ likedProfiles, currentUser }: ProfileSectionPro
             <div className="flex items-end gap-4 mb-4">
               <div className="relative">
                 <div className="w-24 h-24 rounded-3xl overflow-hidden bg-card border-4 border-background shadow-xl">
-                  <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser?.name ?? "Me")}&backgroundColor=ffb3ba`} alt="Я" className="w-full h-full object-cover" />
+                  <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(displayProfile.name || "Me")}&backgroundColor=ffb3ba`} alt="Я" className="w-full h-full object-cover" />
                 </div>
                 <button className="absolute -bottom-1 -right-1 w-7 h-7 gradient-spark rounded-xl flex items-center justify-center shadow-lg">
                   <Icon name="Camera" size={13} className="text-white" />
@@ -29,12 +157,14 @@ export function ProfileSection({ likedProfiles, currentUser }: ProfileSectionPro
               </div>
               <div className="pb-2">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold">{currentUser?.name ?? "Профиль"}</h2>
+                  <h2 className="text-xl font-bold">{displayProfile.name || "Профиль"}</h2>
                   <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                     <Icon name="Check" size={10} className="text-white" />
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{currentUser?.email ?? ""}</p>
+                <p className="text-sm text-muted-foreground">
+                  {[displayProfile.age ? `${displayProfile.age} лет` : null, displayProfile.city].filter(Boolean).join(" · ") || displayProfile.email}
+                </p>
                 <div className="flex items-center gap-1 mt-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full" />
                   <span className="text-xs text-green-400">Онлайн</span>
@@ -60,29 +190,21 @@ export function ProfileSection({ likedProfiles, currentUser }: ProfileSectionPro
 
         <div className="px-4 space-y-4">
           <div className="bg-card rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold">О себе</p>
-              <button className="text-spark-pink text-xs">Изменить</button>
-            </div>
-            <Textarea
-              defaultValue="Люблю кофе и длинные прогулки. Ищу человека, с которым можно говорить ни о чём часами."
-              className="bg-transparent border-0 resize-none text-sm text-muted-foreground p-0 focus-visible:ring-0"
-              rows={3}
-            />
+            <p className="text-sm font-semibold mb-2">О себе</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {displayProfile.about || "Расскажи о себе — нажми «Редактировать профиль»"}
+            </p>
           </div>
 
           <div className="bg-card rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold">Мои интересы</p>
-              <button className="text-spark-pink text-xs">+ Добавить</button>
-            </div>
+            <p className="text-sm font-semibold mb-3">Интересы</p>
             <div className="flex flex-wrap gap-2">
-              {["Путешествия", "Кино", "Кулинария", "Йога"].map(i => (
-                <span key={i} className="px-3 py-1.5 gradient-spark text-white rounded-full text-xs font-medium">{i}</span>
-              ))}
-              {INTERESTS.slice(4, 7).map(i => (
-                <span key={i} className="px-3 py-1.5 bg-secondary text-muted-foreground rounded-full text-xs">{i}</span>
-              ))}
+              {activeInterests.length > 0
+                ? activeInterests.map(i => (
+                    <span key={i} className="px-3 py-1.5 gradient-spark text-white rounded-full text-xs font-medium">{i}</span>
+                  ))
+                : <span className="text-xs text-muted-foreground">Не указаны — добавь в редактировании</span>
+              }
             </div>
           </div>
 
@@ -97,7 +219,7 @@ export function ProfileSection({ likedProfiles, currentUser }: ProfileSectionPro
             <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
           </div>
 
-          <Button className="w-full h-12 gradient-spark border-0 text-white font-semibold rounded-2xl hover:opacity-90">
+          <Button onClick={openEdit} className="w-full h-12 gradient-spark border-0 text-white font-semibold rounded-2xl hover:opacity-90">
             <Icon name="Edit" size={16} className="mr-2" /> Редактировать профиль
           </Button>
         </div>
