@@ -56,28 +56,48 @@ export default function DiscoverSection({
   const [allProfiles, setAllProfiles] = useState<Profile[]>(PROFILES);
   const [distances, setDistances] = useState<Record<number, number>>({});
 
-  // открыть профиль из чата
+  // открыть профиль из чата — загружаем данные с бэкенда по ID
   useEffect(() => {
     if (!viewProfileId) return;
-    const existing = allProfiles.find(p => p.id === viewProfileId);
-    if (existing) {
-      setSelectedProfile(existing);
-    } else {
-      // создаём минимальный профиль из переданных данных
-      setSelectedProfile({
-        id: viewProfileId,
-        name: viewProfileName || "",
-        age: 0,
-        city: "",
-        about: "",
-        interests: [],
-        img: viewProfileAvatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(viewProfileName || "user")}&backgroundColor=ffb3ba`,
-        verified: false,
-        online: false,
-        match: 0,
-      });
-    }
     onClearViewProfile?.();
+    const token = localStorage.getItem("cep-token");
+    fetch(`${USERS_URL}?token=${token}&user_id=${viewProfileId}`)
+      .then(r => r.json())
+      .then(data => {
+        const u = data.user;
+        if (u) {
+          setSelectedProfile({
+            id: u.id,
+            name: u.name || "",
+            age: u.age || 0,
+            city: u.city || "",
+            about: u.about || "",
+            interests: u.interests || [],
+            img: u.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(u.name || "user")}&backgroundColor=ffb3ba`,
+            verified: false,
+            online: false,
+            match: 0,
+          });
+        } else {
+          // fallback — минимальный профиль из имени/аватара
+          setSelectedProfile({
+            id: viewProfileId,
+            name: viewProfileName || "",
+            age: 0, city: "", about: "", interests: [],
+            img: viewProfileAvatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(viewProfileName || "user")}&backgroundColor=ffb3ba`,
+            verified: false, online: false, match: 0,
+          });
+        }
+      })
+      .catch(() => {
+        setSelectedProfile({
+          id: viewProfileId,
+          name: viewProfileName || "",
+          age: 0, city: "", about: "", interests: [],
+          img: viewProfileAvatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(viewProfileName || "user")}&backgroundColor=ffb3ba`,
+          verified: false, online: false, match: 0,
+        });
+      });
   }, [viewProfileId]);
 
   const loadUsers = (token: string) => {

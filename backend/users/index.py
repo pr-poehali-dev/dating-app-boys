@@ -40,6 +40,7 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "Сессия устарела"})}
     current_id, my_lat, my_lng = row
+    params = event.get("queryStringParameters") or {}
 
     # POST — сохранить координаты
     if event.get("httpMethod") == "POST":
@@ -52,6 +53,24 @@ def handler(event: dict, context) -> dict:
             my_lat, my_lng = lat, lng
         conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
+
+    # GET ?user_id=X — один пользователь по ID
+    user_id_param = params.get("user_id")
+    if user_id_param:
+        cur.execute("""
+            SELECT id, name, age, city, about, interests, avatar_url
+            FROM users WHERE id = %s
+        """, (int(user_id_param),))
+        r = cur.fetchone()
+        conn.close()
+        if not r:
+            return {"statusCode": 404, "headers": CORS, "body": json.dumps({"error": "Не найден"})}
+        uid, name, age, city, about, interests, avatar_url = r
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"user": {
+            "id": uid, "name": name or "", "age": age or 0, "city": city or "",
+            "about": about or "", "avatar_url": avatar_url or "",
+            "interests": [i.strip() for i in (interests or "").split(",") if i.strip()],
+        }})}
 
     # GET — список пользователей
     cur.execute("""
