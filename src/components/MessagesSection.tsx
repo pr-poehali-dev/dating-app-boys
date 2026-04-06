@@ -16,23 +16,30 @@ export function MatchesSection({ likedProfiles, handleLike }: MatchesSectionProp
 
         <div>
           <p className="text-sm text-muted-foreground mb-3">Новые совпадения</p>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {MATCHES.map(m => (
-              <div key={m.id} className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-full p-0.5 gradient-spark">
-                    <div className="w-full h-full rounded-full overflow-hidden bg-card">
-                      <img src={m.img} alt={m.name} className="w-full h-full object-cover" />
+          {MATCHES.length === 0 ? (
+            <div className="bg-card rounded-2xl p-6 text-center text-muted-foreground text-sm">
+              <Icon name="Zap" size={32} className="mx-auto mb-2 opacity-30" />
+              Пока совпадений нет — ставь симпатии в ленте
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {MATCHES.map(m => (
+                <div key={m.id} className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full p-0.5 gradient-spark">
+                      <div className="w-full h-full rounded-full overflow-hidden bg-card">
+                        <img src={m.img} alt={m.name} className="w-full h-full object-cover" />
+                      </div>
                     </div>
+                    {m.online && (
+                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
+                    )}
                   </div>
-                  {m.online && (
-                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
-                  )}
+                  <p className="text-xs text-center font-medium">{m.name}</p>
                 </div>
-                <p className="text-xs text-center font-medium">{m.name}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -144,37 +151,45 @@ export function MessagesSection({ activeChat, setActiveChat, message, setMessage
           <h2 className="text-lg font-bold flex-1">Сообщения</h2>
           <Icon name="Search" size={18} className="text-muted-foreground" />
         </div>
-        {MATCHES.map(m => (
-          <div
-            key={m.id}
-            onClick={() => setActiveChat(m)}
-            className="bg-card rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover-scale card-glow"
-          >
-            <div className="relative">
-              <Avatar className="w-12 h-12">
-                <AvatarImage src={m.img} />
-                <AvatarFallback>{m.name[0]}</AvatarFallback>
-              </Avatar>
-              {m.online && (
-                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-card" />
+        {MATCHES.length === 0 ? (
+          <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground text-sm">
+            <Icon name="MessageCircle" size={40} className="mx-auto mb-3 opacity-30" />
+            <p className="font-medium mb-1">Сообщений пока нет</p>
+            <p className="text-xs">Найди людей в ленте и поставь симпатию — они смогут написать тебе</p>
+          </div>
+        ) : (
+          MATCHES.map(m => (
+            <div
+              key={m.id}
+              onClick={() => setActiveChat(m)}
+              className="bg-card rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover-scale card-glow"
+            >
+              <div className="relative">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={m.img} />
+                  <AvatarFallback>{m.name[0]}</AvatarFallback>
+                </Avatar>
+                {m.online && (
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-card" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline">
+                  <p className="font-semibold truncate">{m.name}</p>
+                  <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">{m.time}</span>
+                </div>
+                <p className={cn("text-sm truncate", m.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground")}>
+                  {m.lastMsg}
+                </p>
+              </div>
+              {m.unread > 0 && (
+                <div className="w-5 h-5 gradient-spark rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">{m.unread}</span>
+                </div>
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-baseline">
-                <p className="font-semibold truncate">{m.name}</p>
-                <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">{m.time}</span>
-              </div>
-              <p className={cn("text-sm truncate", m.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground")}>
-                {m.lastMsg}
-              </p>
-            </div>
-            {m.unread > 0 && (
-              <div className="w-5 h-5 gradient-spark rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">{m.unread}</span>
-              </div>
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
