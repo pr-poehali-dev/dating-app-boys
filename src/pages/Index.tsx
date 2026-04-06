@@ -6,83 +6,26 @@ import DiscoverSection from "@/components/DiscoverSection";
 import { MatchesSection, MessagesSection } from "@/components/MessagesSection";
 import { ProfileSection, SettingsSection, SupportSection } from "@/components/AccountSection";
 
-function LogoVariant1() {
+function Logo() {
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
       <defs>
-        <linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+        <linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop stopColor="#f43f7f"/>
           <stop offset="1" stopColor="#a855f7"/>
         </linearGradient>
       </defs>
-      <rect width="32" height="32" rx="10" fill="url(#lg1)"/>
-      {/* Звено цепи с сердцем */}
-      <path d="M10 13 C10 10.2 12.2 8 15 8 L17 8 C19.8 8 22 10.2 22 13 C22 15.8 19.8 18 17 18 L15 18 C12.2 18 10 15.8 10 13Z" stroke="white" strokeWidth="2" fill="none"/>
-      <path d="M14 13 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-      {/* Сердце внизу */}
-      <path d="M13 21 C13 21 10 19 10 17 C10 15.9 10.9 15 12 15 C12.6 15 13.1 15.3 13.5 15.7 C13.9 15.3 14.4 15 15 15 C16.1 15 17 15.9 17 17 C17 19 14 22 13 22Z" fill="white" fillOpacity="0.9"/>
-    </svg>
-  );
-}
-
-function LogoVariant2() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <defs>
-        <linearGradient id="lg2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f43f7f"/>
-          <stop offset="1" stopColor="#a855f7"/>
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="10" fill="url(#lg2)"/>
-      {/* Бесконечность из двух колец-звеньев */}
-      <ellipse cx="12" cy="16" rx="5" ry="7" stroke="white" strokeWidth="2.2" fill="none"/>
-      <ellipse cx="20" cy="16" rx="5" ry="7" stroke="white" strokeWidth="2.2" fill="none"/>
-    </svg>
-  );
-}
-
-function LogoVariant3() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <defs>
-        <linearGradient id="lg3" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f43f7f"/>
-          <stop offset="1" stopColor="#a855f7"/>
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="10" fill="url(#lg3)"/>
-      {/* Буква Ц стилизована под звено */}
+      <rect width="32" height="32" rx="10" fill="url(#logo-grad)"/>
       <path d="M9 22 L9 11 C9 9.9 9.9 9 11 9 L15 9 C16.1 9 17 9.9 17 11 L17 22" stroke="white" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
       <path d="M9 22 L19 22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
       <path d="M19 22 L19 18" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-      {/* Маленькое звено */}
       <ellipse cx="22" cy="14" rx="3" ry="4.5" stroke="white" strokeWidth="1.8" fill="none"/>
-    </svg>
-  );
-}
-
-function LogoVariant4() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <defs>
-        <linearGradient id="lg4a" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f43f7f"/>
-          <stop offset="1" stopColor="#a855f7"/>
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="10" fill="url(#lg4a)"/>
-      {/* Два пересекающихся круга */}
-      <circle cx="13" cy="16" r="6" stroke="white" strokeWidth="2.2" fill="none"/>
-      <circle cx="19" cy="16" r="6" stroke="white" strokeWidth="2.2" fill="white" fillOpacity="0.15"/>
     </svg>
   );
 }
 
 export default function Index() {
   const [section, setSection] = useState<Section>("discover");
-  const [logoChoice, setLogoChoice] = useState<number | null>(null);
-  const [showLogoPicker, setShowLogoPicker] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [activeChat, setActiveChat] = useState<Match | null>(null);
   const [likedProfiles, setLikedProfiles] = useState<number[]>([]);
@@ -111,90 +54,15 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background flex flex-col" style={{ fontFamily: "'Golos Text', sans-serif" }}>
 
-      {/* Logo picker modal */}
-      {showLogoPicker && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowLogoPicker(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative bg-card rounded-3xl p-6 w-full max-w-sm animate-scale-in" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-base mb-1">Выбери логотип</h3>
-            <p className="text-xs text-muted-foreground mb-5">Нажми на понравившийся вариант</p>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { v: 1, label: "Звено + сердце", node: <LogoVariant1 /> },
-                { v: 2, label: "Два кольца", node: <LogoVariant2 /> },
-                { v: 3, label: "Монограмма Ц", node: <LogoVariant3 /> },
-                { v: 4, label: "Пересечение", node: <LogoVariant4 /> },
-              ].map(({ v, label, node }) => (
-                <button
-                  key={v}
-                  onClick={() => { setLogoChoice(v); setShowLogoPicker(false); }}
-                  className={cn(
-                    "flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-200",
-                    logoChoice === v
-                      ? "border-spark-pink bg-spark-pink/10"
-                      : "border-border hover:border-spark-pink/40 bg-secondary/40"
-                  )}
-                >
-                  <div className="w-14 h-14 flex items-center justify-center">
-                    <svg width="56" height="56" viewBox="0 0 32 32" fill="none" style={{ display: 'block' }}>
-                      {v === 1 && <>
-                        <defs><linearGradient id="p1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f7f"/><stop offset="1" stopColor="#a855f7"/></linearGradient></defs>
-                        <rect width="32" height="32" rx="10" fill="url(#p1)"/>
-                        <path d="M10 13 C10 10.2 12.2 8 15 8 L17 8 C19.8 8 22 10.2 22 13 C22 15.8 19.8 18 17 18 L15 18 C12.2 18 10 15.8 10 13Z" stroke="white" strokeWidth="2" fill="none"/>
-                        <path d="M14 13 L18 13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                        <path d="M13 21 C13 21 10 19 10 17 C10 15.9 10.9 15 12 15 C12.6 15 13.1 15.3 13.5 15.7 C13.9 15.3 14.4 15 15 15 C16.1 15 17 15.9 17 17 C17 19 14 22 13 22Z" fill="white" fillOpacity="0.9"/>
-                      </>}
-                      {v === 2 && <>
-                        <defs><linearGradient id="p2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f7f"/><stop offset="1" stopColor="#a855f7"/></linearGradient></defs>
-                        <rect width="32" height="32" rx="10" fill="url(#p2)"/>
-                        <ellipse cx="12" cy="16" rx="5" ry="7" stroke="white" strokeWidth="2.2" fill="none"/>
-                        <ellipse cx="20" cy="16" rx="5" ry="7" stroke="white" strokeWidth="2.2" fill="none"/>
-                      </>}
-                      {v === 3 && <>
-                        <defs><linearGradient id="p3" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f7f"/><stop offset="1" stopColor="#a855f7"/></linearGradient></defs>
-                        <rect width="32" height="32" rx="10" fill="url(#p3)"/>
-                        <path d="M9 22 L9 11 C9 9.9 9.9 9 11 9 L15 9 C16.1 9 17 9.9 17 11 L17 22" stroke="white" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M9 22 L19 22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                        <path d="M19 22 L19 18" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                        <ellipse cx="22" cy="14" rx="3" ry="4.5" stroke="white" strokeWidth="1.8" fill="none"/>
-                      </>}
-                      {v === 4 && <>
-                        <defs><linearGradient id="p4" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f7f"/><stop offset="1" stopColor="#a855f7"/></linearGradient></defs>
-                        <rect width="32" height="32" rx="10" fill="url(#p4)"/>
-                        <circle cx="13" cy="16" r="6" stroke="white" strokeWidth="2.2" fill="none"/>
-                        <circle cx="19" cy="16" r="6" stroke="white" strokeWidth="2.2" fill="white" fillOpacity="0.15"/>
-                      </>}
-                    </svg>
-                  </div>
-                  <span className="text-xs text-center font-medium leading-tight">{label}</span>
-                  {logoChoice === v && <div className="w-4 h-4 gradient-spark rounded-full flex items-center justify-center"><Icon name="Check" size={10} className="text-white" /></div>}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => setShowLogoPicker(false)} className="mt-4 w-full py-2.5 rounded-xl bg-secondary text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Отмена
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Top Bar */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-        <button className="flex items-center gap-2" onClick={() => setShowLogoPicker(true)}>
-          {logoChoice === 1 && <LogoVariant1 />}
-          {logoChoice === 2 && <LogoVariant2 />}
-          {logoChoice === 3 && <LogoVariant3 />}
-          {logoChoice === 4 && <LogoVariant4 />}
-          {!logoChoice && (
-            <div className="w-8 h-8 gradient-spark rounded-xl flex items-center justify-center ring-2 ring-spark-pink/40 ring-offset-2 ring-offset-background">
-              <span className="text-white text-sm font-bold">Ц</span>
-            </div>
-          )}
+        <div className="flex items-center gap-2">
+          <Logo />
           <div className="text-left">
             <span className="font-bold text-lg gradient-spark-text leading-none block">Цепь</span>
             <span className="text-[10px] text-muted-foreground leading-none">соединяем людей</span>
           </div>
-        </button>
+        </div>
         <div className="flex items-center gap-2">
           {section === "discover" && (
             <button
