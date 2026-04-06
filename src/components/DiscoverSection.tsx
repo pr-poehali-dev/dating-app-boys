@@ -24,6 +24,7 @@ interface DiscoverSectionProps {
   selectedInterests: string[];
   setSelectedInterests: (v: string[]) => void;
   setSection: (s: Section) => void;
+  onOpenChat: (userId: number, name: string, avatarUrl: string) => void;
 }
 
 export default function DiscoverSection({
@@ -42,6 +43,7 @@ export default function DiscoverSection({
   selectedInterests,
   setSelectedInterests,
   setSection,
+  onOpenChat,
 }: DiscoverSectionProps) {
   const [allProfiles, setAllProfiles] = useState<Profile[]>(PROFILES);
 
@@ -147,7 +149,10 @@ export default function DiscoverSection({
             </div>
             <Button
               className="w-full h-12 rounded-2xl bg-accent/20 text-accent border-0 hover:bg-accent/30 font-semibold"
-              onClick={() => { setSelectedProfile(null); setSection("messages"); }}
+              onClick={() => {
+                onOpenChat(selectedProfile.id, selectedProfile.name, selectedProfile.img);
+                setSelectedProfile(null);
+              }}
             >
               <Icon name="MessageCircle" size={18} className="mr-2" /> Написать сообщение
             </Button>

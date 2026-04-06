@@ -153,6 +153,7 @@ export default function Index() {
             selectedInterests={selectedInterests}
             setSelectedInterests={setSelectedInterests}
             setSection={setSection}
+            onOpenChat={handleOpenChat}
           />
         )}
 
