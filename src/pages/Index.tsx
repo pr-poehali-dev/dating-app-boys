@@ -193,7 +193,6 @@ export default function Index() {
 
         {section === "profile" && (
           <ProfileSection
-            likedProfiles={likedProfiles}
             currentUser={currentUser}
             onProfileUpdated={setCurrentUser}
           />

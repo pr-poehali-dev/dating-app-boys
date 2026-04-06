@@ -37,6 +37,15 @@ def handler(event: dict, context) -> dict:
     user_id, name, email, city, about, interests, age, avatar_url = row
 
     if event.get("httpMethod") == "GET":
+        # реальные счётчики
+        cur.execute("SELECT COUNT(*) FROM likes WHERE to_user_id = %s", (user_id,))
+        likes_count = cur.fetchone()[0]
+        cur.execute("""
+            SELECT COUNT(*) FROM likes l1
+            JOIN likes l2 ON l1.from_user_id = l2.to_user_id AND l1.to_user_id = l2.from_user_id
+            WHERE l1.from_user_id = %s
+        """, (user_id,))
+        matches_count = cur.fetchone()[0]
         conn.close()
         return {
             "statusCode": 200,
@@ -45,7 +54,9 @@ def handler(event: dict, context) -> dict:
                 "id": user_id, "name": name, "email": email,
                 "city": city or "", "about": about or "",
                 "interests": interests or "", "age": age or 0,
-                "avatar_url": avatar_url or ""
+                "avatar_url": avatar_url or "",
+                "likes_count": likes_count,
+                "matches_count": matches_count,
             })
         }
 

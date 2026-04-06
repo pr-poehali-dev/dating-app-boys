@@ -53,8 +53,9 @@ export default function DiscoverSection({
   viewProfileAvatar,
   onClearViewProfile,
 }: DiscoverSectionProps) {
-  const [allProfiles, setAllProfiles] = useState<Profile[]>(PROFILES);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [distances, setDistances] = useState<Record<number, number>>({});
+  const [loading, setLoading] = useState(true);
 
   // открыть профиль из чата — загружаем данные с бэкенда по ID
   useEffect(() => {
@@ -121,10 +122,8 @@ export default function DiscoverSection({
             online: u.online,
             match: u.match,
           }));
-          // моки только если нет реальных пользователей
-          const realIds = new Set(mapped.map(m => m.id));
-          const mockFallback = PROFILES.filter(p => !realIds.has(p.id));
-          setAllProfiles(mapped.length > 0 ? [...mapped, ...mockFallback] : PROFILES);
+          setAllProfiles(mapped);
+          setLoading(false);
           const dist: Record<number, number> = {};
           data.users.forEach((u: { id: number; distance: number | null }) => {
             if (u.distance !== null && u.distance !== undefined) dist[u.id] = u.distance;
@@ -132,7 +131,7 @@ export default function DiscoverSection({
           setDistances(dist);
         }
       })
-      .catch(() => {});
+      .catch(() => { setLoading(false); });
   };
 
   useEffect(() => {
@@ -303,10 +302,15 @@ export default function DiscoverSection({
             <h2 className="text-lg font-bold">Рядом с тобой</h2>
             <span className="text-sm text-muted-foreground">{filteredProfiles.length} человек</span>
           </div>
-          {filteredProfiles.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Icon name="Loader" size={36} className="mx-auto mb-3 opacity-40 animate-spin" />
+              <p>Ищем людей рядом...</p>
+            </div>
+          ) : filteredProfiles.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <Icon name="SearchX" size={40} className="mx-auto mb-3 opacity-40" />
-              <p>Никого не нашли по фильтрам</p>
+              <p>Пока никого нет — зарегистрируй друзей!</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">

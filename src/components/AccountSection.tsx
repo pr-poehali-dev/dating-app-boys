@@ -14,15 +14,16 @@ interface UserProfile {
   id: number; name: string; email: string;
   city: string; about: string; interests: string; age: number;
   avatar_url?: string;
+  likes_count?: number;
+  matches_count?: number;
 }
 
 interface ProfileSectionProps {
-  likedProfiles: number[];
   currentUser: { id: number; name: string; email: string } | null;
   onProfileUpdated: (user: { id: number; name: string; email: string }) => void;
 }
 
-export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }: ProfileSectionProps) {
+export function ProfileSection({ currentUser, onProfileUpdated }: ProfileSectionProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -218,11 +219,10 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
               {[
-                { label: "Симпатии", value: likedProfiles.length + 12, icon: "Heart" },
-                { label: "Совпадений", value: 3, icon: "Zap" },
-                { label: "Просмотров", value: 148, icon: "Eye" },
+                { label: "Симпатии ко мне", value: profile?.likes_count ?? "—", icon: "Heart" },
+                { label: "Совпадений", value: profile?.matches_count ?? "—", icon: "Zap" },
               ].map(stat => (
                 <div key={stat.label} className="bg-card rounded-2xl p-3 text-center card-glow">
                   <Icon name={stat.icon as "Heart"} size={18} className="text-spark-pink mx-auto mb-1" />
