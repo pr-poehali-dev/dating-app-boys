@@ -8,9 +8,10 @@ import { INTERESTS, type Section } from "@/components/data";
 
 interface ProfileSectionProps {
   likedProfiles: number[];
+  currentUser: { id: number; name: string; email: string } | null;
 }
 
-export function ProfileSection({ likedProfiles }: ProfileSectionProps) {
+export function ProfileSection({ likedProfiles, currentUser }: ProfileSectionProps) {
   return (
     <div className="h-full overflow-y-auto animate-fade-in">
       <div className="max-w-2xl mx-auto pb-6">
@@ -20,7 +21,7 @@ export function ProfileSection({ likedProfiles }: ProfileSectionProps) {
             <div className="flex items-end gap-4 mb-4">
               <div className="relative">
                 <div className="w-24 h-24 rounded-3xl overflow-hidden bg-card border-4 border-background shadow-xl">
-                  <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=Me&backgroundColor=ffb3ba" alt="Я" className="w-full h-full object-cover" />
+                  <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser?.name ?? "Me")}&backgroundColor=ffb3ba`} alt="Я" className="w-full h-full object-cover" />
                 </div>
                 <button className="absolute -bottom-1 -right-1 w-7 h-7 gradient-spark rounded-xl flex items-center justify-center shadow-lg">
                   <Icon name="Camera" size={13} className="text-white" />
@@ -28,12 +29,12 @@ export function ProfileSection({ likedProfiles }: ProfileSectionProps) {
               </div>
               <div className="pb-2">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold">Анна</h2>
+                  <h2 className="text-xl font-bold">{currentUser?.name ?? "Профиль"}</h2>
                   <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                     <Icon name="Check" size={10} className="text-white" />
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">25 лет · Москва</p>
+                <p className="text-sm text-muted-foreground">{currentUser?.email ?? ""}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full" />
                   <span className="text-xs text-green-400">Онлайн</span>

@@ -151,7 +151,7 @@ export default function Index() {
         )}
 
         {section === "profile" && (
-          <ProfileSection likedProfiles={likedProfiles} />
+          <ProfileSection likedProfiles={likedProfiles} currentUser={currentUser} />
         )}
 
         {section === "settings" && (
