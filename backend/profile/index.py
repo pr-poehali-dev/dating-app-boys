@@ -13,8 +13,9 @@ def handler(event: dict, context) -> dict:
     """Получение и обновление профиля пользователя приложения Цепь."""
     cors = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, X-Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Authorization",
+        "Access-Control-Max-Age": "86400",
     }
 
     if event.get("httpMethod") == "OPTIONS":
