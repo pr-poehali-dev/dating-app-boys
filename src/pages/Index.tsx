@@ -40,9 +40,9 @@ export default function Index() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 gradient-spark rounded-xl flex items-center justify-center">
-            <span className="text-white text-sm font-bold">S</span>
+            <span className="text-white text-sm font-bold">Ц</span>
           </div>
-          <span className="font-bold text-lg gradient-spark-text">Spark</span>
+          <span className="font-bold text-lg gradient-spark-text">Цепь</span>
         </div>
         <div className="flex items-center gap-2">
           {section === "discover" && (
