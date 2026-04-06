@@ -1,12 +1,14 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
-import { type Section, type Match, type Profile } from "@/components/data";
+import { type Section, type Profile } from "@/components/data";
 import DiscoverSection from "@/components/DiscoverSection";
 import { MatchesSection, MessagesSection } from "@/components/MessagesSection";
 import { ProfileSection, SettingsSection, SupportSection } from "@/components/AccountSection";
 import Onboarding from "@/components/Onboarding";
 import Auth from "@/components/Auth";
+
+const MESSAGES_API = "https://functions.poehali.dev/be091fa2-c319-4e0c-8a70-41d2d8a2b839";
 
 function Logo() {
   return (
@@ -35,26 +37,45 @@ export default function Index() {
   });
   const [section, setSection] = useState<Section>("discover");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [activeChat, setActiveChat] = useState<Match | null>(null);
   const [likedProfiles, setLikedProfiles] = useState<number[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [ageRange, setAgeRange] = useState([18, 40]);
   const [distance, setDistance] = useState([50]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [message, setMessage] = useState("");
   const [heartedId, setHeartedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // для открытия чата из MatchesSection
+  const [openChatUserId, setOpenChatUserId] = useState<number | null>(null);
+  const [openChatName, setOpenChatName] = useState("");
+  const [openChatAvatar, setOpenChatAvatar] = useState("");
+
   const handleLike = (id: number) => {
+    const isLiked = likedProfiles.includes(id);
     setHeartedId(id);
-    setLikedProfiles(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    setLikedProfiles(prev => isLiked ? prev.filter(x => x !== id) : [...prev, id]);
     setTimeout(() => setHeartedId(null), 1400);
+
+    // сохраняем в БД
+    const token = localStorage.getItem("cep-token");
+    fetch(`${MESSAGES_API}?token=${token}&action=like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to_user_id: id, action: isLiked ? "unlike" : "like" }),
+    }).catch(() => {});
   };
 
-  const navItems: { key: Section; icon: string; label: string; badge?: number }[] = [
+  const handleOpenChat = (userId: number, name: string, avatarUrl: string) => {
+    setOpenChatUserId(userId);
+    setOpenChatName(name);
+    setOpenChatAvatar(avatarUrl);
+    setSection("messages");
+  };
+
+  const navItems: { key: Section; icon: string; label: string }[] = [
     { key: "discover", icon: "Compass", label: "Найти" },
-    { key: "matches", icon: "Heart", label: "Симпатии", badge: 3 },
-    { key: "messages", icon: "MessageCircle", label: "Чаты", badge: 2 },
+    { key: "matches", icon: "Heart", label: "Симпатии" },
+    { key: "messages", icon: "MessageCircle", label: "Чаты" },
     { key: "profile", icon: "User", label: "Профиль" },
     { key: "settings", icon: "Settings", label: "Настройки" },
   ];
@@ -79,18 +100,12 @@ export default function Index() {
     setSection("discover");
   };
 
-  if (!onboarded) {
-    return <Onboarding onDone={handleOnboardingDone} />;
-  }
-
-  if (!authed) {
-    return <Auth onDone={handleAuthDone} />;
-  }
+  if (!onboarded) return <Onboarding onDone={handleOnboardingDone} />;
+  if (!authed) return <Auth onDone={handleAuthDone} />;
 
   return (
     <div className="min-h-screen bg-background flex flex-col" style={{ fontFamily: "'Golos Text', sans-serif" }}>
 
-      {/* Top Bar */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Logo />
@@ -120,7 +135,6 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="flex-1 overflow-hidden relative">
         {section === "discover" && (
           <DiscoverSection
@@ -146,15 +160,16 @@ export default function Index() {
           <MatchesSection
             likedProfiles={likedProfiles}
             handleLike={handleLike}
+            onOpenChat={handleOpenChat}
           />
         )}
 
         {section === "messages" && (
           <MessagesSection
-            activeChat={activeChat}
-            setActiveChat={setActiveChat}
-            message={message}
-            setMessage={setMessage}
+            initialChatUserId={openChatUserId}
+            initialChatName={openChatName}
+            initialChatAvatar={openChatAvatar}
+            onClearInitial={() => setOpenChatUserId(null)}
           />
         )}
 
@@ -175,13 +190,12 @@ export default function Index() {
         )}
       </main>
 
-      {/* Bottom Nav */}
       <nav className="sticky bottom-0 bg-card/95 backdrop-blur-xl border-t border-border px-2 py-2">
         <div className="max-w-2xl mx-auto flex items-center justify-around">
           {navItems.map(item => (
             <button
               key={item.key}
-              onClick={() => { setSection(item.key); setSelectedProfile(null); setActiveChat(null); }}
+              onClick={() => { setSection(item.key); setSelectedProfile(null); }}
               className={cn(
                 "flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all duration-200 relative min-w-[56px]",
                 section === item.key ? "text-spark-pink" : "text-muted-foreground hover:text-foreground"
@@ -199,11 +213,6 @@ export default function Index() {
               )}>
                 {item.label}
               </span>
-              {item.badge && item.badge > 0 && (
-                <div className="absolute top-1 right-2 w-4 h-4 gradient-spark rounded-full flex items-center justify-center">
-                  <span className="text-white text-[9px] font-bold">{item.badge}</span>
-                </div>
-              )}
             </button>
           ))}
         </div>

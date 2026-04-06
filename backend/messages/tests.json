@@ -1,8 +1,8 @@
 {
   "tests": [
     {
-      "name": "Upload without token",
-      "method": "POST",
+      "name": "Get chats without token",
+      "method": "GET",
       "path": "/",
       "expectedStatus": 401,
       "expectedBody": {"error": "Не авторизован"},
