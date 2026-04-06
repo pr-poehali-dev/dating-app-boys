@@ -42,7 +42,10 @@ export default function Index() {
           <div className="w-8 h-8 gradient-spark rounded-xl flex items-center justify-center">
             <span className="text-white text-sm font-bold">Ц</span>
           </div>
-          <span className="font-bold text-lg gradient-spark-text">Цепь</span>
+          <div>
+            <span className="font-bold text-lg gradient-spark-text leading-none block">Цепь</span>
+            <span className="text-[10px] text-muted-foreground leading-none">найди свою цепочку</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {section === "discover" && (
