@@ -40,17 +40,20 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
     if (!token) return;
     fetch(PROFILE_URL, { headers: { "Authorization": `Bearer ${token}` } })
       .then(r => r.json())
-      .then(data => { if (data.id) setProfile(data); })
-      .catch(() => {});
+      .then(data => {
+        console.log("[profile] response:", data);
+        if (data.id) setProfile(data);
+      })
+      .catch(err => console.error("[profile] fetch error:", err));
   }, []);
 
   const openEdit = () => {
-    if (!profile) return;
-    setEditName(profile.name);
-    setEditCity(profile.city);
-    setEditAbout(profile.about);
-    setEditAge(profile.age ? String(profile.age) : "");
-    setEditInterests(profile.interests ? profile.interests.split(",").map(s => s.trim()).filter(Boolean) : []);
+    const src = profile ?? { name: currentUser?.name ?? "", email: currentUser?.email ?? "", city: "", about: "", interests: "", age: 0, avatar_url: "" };
+    setEditName(src.name);
+    setEditCity(src.city || "");
+    setEditAbout(src.about || "");
+    setEditAge(src.age ? String(src.age) : "");
+    setEditInterests(src.interests ? src.interests.split(",").map(s => s.trim()).filter(Boolean) : []);
     setSaveError("");
     setEditing(true);
   };
@@ -109,7 +112,7 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
     reader.readAsDataURL(file);
   };
 
-  const displayProfile = profile ?? { name: currentUser?.name ?? "", email: currentUser?.email ?? "", city: "", about: "", interests: "", age: 0 };
+  const displayProfile = profile ?? { name: currentUser?.name ?? "", email: currentUser?.email ?? "", city: "", about: "", interests: "", age: 0, avatar_url: "" };
   const activeInterests = displayProfile.interests ? displayProfile.interests.split(",").map(s => s.trim()).filter(Boolean) : [];
 
   return (
