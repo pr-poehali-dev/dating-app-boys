@@ -31,8 +31,15 @@ def handler(event: dict, context) -> dict:
     cur = conn.cursor()
     row = get_user_by_token(cur, token)
     if not row:
+        cur.execute("SELECT COUNT(*) FROM users")
+        cnt = cur.fetchone()[0]
         conn.close()
-        return {"statusCode": 401, "headers": cors, "body": json.dumps({"error": "Сессия устарела"})}
+        return {"statusCode": 401, "headers": cors, "body": json.dumps({
+            "error": "Сессия устарела",
+            "debug_token_len": len(token),
+            "debug_token_start": token[:10],
+            "debug_users_count": cnt
+        })}
 
     user_id, name, email, city, about, interests, age, avatar_url = row
 
