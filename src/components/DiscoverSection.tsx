@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { INTERESTS, PROFILES, type Profile, type Section } from "@/components/data";
+
+const USERS_URL = "https://functions.poehali.dev/47641443-6779-4930-9263-cd34767d9224";
 
 interface DiscoverSectionProps {
   selectedProfile: Profile | null;
@@ -40,9 +43,40 @@ export default function DiscoverSection({
   setSelectedInterests,
   setSection,
 }: DiscoverSectionProps) {
-  const filteredProfiles = PROFILES.filter(p => {
+  const [allProfiles, setAllProfiles] = useState<Profile[]>(PROFILES);
+
+  useEffect(() => {
+    const token = localStorage.getItem("cep-token");
+    if (!token) return;
+    fetch(USERS_URL, { headers: { "Authorization": `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => {
+        if (data.users && data.users.length > 0) {
+          const mapped: Profile[] = data.users.map((u: {
+            id: number; name: string; age: number; city: string;
+            about: string; interests: string[]; avatar_url: string;
+            verified: boolean; online: boolean; match: number;
+          }) => ({
+            id: u.id,
+            name: u.name,
+            age: u.age || 0,
+            city: u.city || "",
+            about: u.about || "",
+            interests: u.interests || [],
+            img: u.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(u.name)}&backgroundColor=ffb3ba`,
+            verified: u.verified,
+            online: u.online,
+            match: u.match,
+          }));
+          setAllProfiles([...mapped, ...PROFILES]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredProfiles = allProfiles.filter(p => {
     if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase()) && !p.city.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (p.age < ageRange[0] || p.age > ageRange[1]) return false;
+    if (p.age && (p.age < ageRange[0] || p.age > ageRange[1])) return false;
     if (selectedInterests.length > 0 && !selectedInterests.some(i => p.interests.includes(i))) return false;
     return true;
   });
