@@ -6,7 +6,7 @@ def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
 def get_user_by_token(cur, token):
-    cur.execute("SELECT id, name, email, city, about, interests, age FROM users WHERE session_token = %s", (token,))
+    cur.execute("SELECT id, name, email, city, about, interests, age, avatar_url FROM users WHERE session_token = %s", (token,))
     return cur.fetchone()
 
 def handler(event: dict, context) -> dict:
@@ -31,7 +31,7 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return {"statusCode": 401, "headers": cors, "body": json.dumps({"error": "Сессия устарела"})}
 
-    user_id, name, email, city, about, interests, age = row
+    user_id, name, email, city, about, interests, age, avatar_url = row
 
     if event.get("httpMethod") == "GET":
         conn.close()
@@ -41,7 +41,8 @@ def handler(event: dict, context) -> dict:
             "body": json.dumps({
                 "id": user_id, "name": name, "email": email,
                 "city": city or "", "about": about or "",
-                "interests": interests or "", "age": age or 0
+                "interests": interests or "", "age": age or 0,
+                "avatar_url": avatar_url or ""
             })
         }
 
@@ -70,7 +71,8 @@ def handler(event: dict, context) -> dict:
                 "ok": True,
                 "user": {"id": user_id, "name": new_name, "email": email,
                          "city": new_city, "about": new_about,
-                         "interests": new_interests, "age": new_age}
+                         "interests": new_interests, "age": new_age,
+                         "avatar_url": avatar_url or ""}
             })
         }
 

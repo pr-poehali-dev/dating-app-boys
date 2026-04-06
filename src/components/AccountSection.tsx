@@ -8,10 +8,12 @@ import { cn } from "@/lib/utils";
 import { INTERESTS, type Section } from "@/components/data";
 
 const PROFILE_URL = "https://functions.poehali.dev/cd62eb2f-9ab4-4319-abaf-48444ad46033";
+const UPLOAD_URL = "https://functions.poehali.dev/1ec5e71a-cc4d-4132-8c67-fde648f1fa0e";
 
 interface UserProfile {
   id: number; name: string; email: string;
   city: string; about: string; interests: string; age: number;
+  avatar_url?: string;
 }
 
 interface ProfileSectionProps {
@@ -25,6 +27,7 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const [editName, setEditName] = useState("");
   const [editCity, setEditCity] = useState("");
@@ -79,6 +82,29 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    const token = localStorage.getItem("cep-token");
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result as string;
+        const res = await fetch(UPLOAD_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ file: base64, type: file.type }),
+        });
+        const data = await res.json();
+        if (data.ok) setProfile(prev => prev ? { ...prev, avatar_url: data.url } : prev);
+      } finally {
+        setUploadingPhoto(false);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const displayProfile = profile ?? { name: currentUser?.name ?? "", email: currentUser?.email ?? "", city: "", about: "", interests: "", age: 0 };
@@ -149,11 +175,22 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
             <div className="flex items-end gap-4 mb-4">
               <div className="relative">
                 <div className="w-24 h-24 rounded-3xl overflow-hidden bg-card border-4 border-background shadow-xl">
-                  <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(displayProfile.name || "Me")}&backgroundColor=ffb3ba`} alt="Я" className="w-full h-full object-cover" />
+                  <img
+                    src={displayProfile.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(displayProfile.name || "Me")}&backgroundColor=ffb3ba`}
+                    alt="Я"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <button className="absolute -bottom-1 -right-1 w-7 h-7 gradient-spark rounded-xl flex items-center justify-center shadow-lg">
-                  <Icon name="Camera" size={13} className="text-white" />
-                </button>
+                <label className={cn(
+                  "absolute -bottom-1 -right-1 w-7 h-7 gradient-spark rounded-xl flex items-center justify-center shadow-lg cursor-pointer",
+                  uploadingPhoto && "opacity-60 pointer-events-none"
+                )}>
+                  {uploadingPhoto
+                    ? <Icon name="Loader" size={13} className="text-white animate-spin" />
+                    : <Icon name="Camera" size={13} className="text-white" />
+                  }
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                </label>
               </div>
               <div className="pb-2">
                 <div className="flex items-center gap-2">
