@@ -6,6 +6,7 @@ import DiscoverSection from "@/components/DiscoverSection";
 import { MatchesSection, MessagesSection } from "@/components/MessagesSection";
 import { ProfileSection, SettingsSection, SupportSection } from "@/components/AccountSection";
 import Onboarding from "@/components/Onboarding";
+import Auth from "@/components/Auth";
 
 function Logo() {
   return (
@@ -27,6 +28,7 @@ function Logo() {
 
 export default function Index() {
   const [onboarded, setOnboarded] = useState(() => localStorage.getItem("cep-onboarded") === "1");
+  const [authed, setAuthed] = useState(() => localStorage.getItem("cep-authed") === "1");
   const [section, setSection] = useState<Section>("discover");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [activeChat, setActiveChat] = useState<Match | null>(null);
@@ -58,8 +60,17 @@ export default function Index() {
     setOnboarded(true);
   };
 
+  const handleAuthDone = () => {
+    localStorage.setItem("cep-authed", "1");
+    setAuthed(true);
+  };
+
   if (!onboarded) {
     return <Onboarding onDone={handleOnboardingDone} />;
+  }
+
+  if (!authed) {
+    return <Auth onDone={handleAuthDone} />;
   }
 
   return (
