@@ -192,7 +192,7 @@ export default function Index() {
           )}
           <div className="text-left">
             <span className="font-bold text-lg gradient-spark-text leading-none block">Цепь</span>
-            <span className="text-[10px] text-muted-foreground leading-none">найди свою цепочку</span>
+            <span className="text-[10px] text-muted-foreground leading-none">соединяем людей</span>
           </div>
         </button>
         <div className="flex items-center gap-2">
