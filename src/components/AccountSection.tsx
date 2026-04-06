@@ -73,15 +73,20 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
           interests: editInterests.join(", ")
         }),
       });
-      const data = await res.json();
-      if (!data.ok) { setSaveError(data.error || "Ошибка сохранения"); return; }
-      setProfile(data.user);
-      onProfileUpdated({ id: data.user.id, name: data.user.name, email: data.user.email });
-      const saved = { ...JSON.parse(localStorage.getItem("cep-user") || "{}"), name: data.user.name };
+      const text = await res.text();
+      console.log("[profile save] status:", res.status, "body:", text);
+      let data: Record<string, unknown>;
+      try { data = JSON.parse(text); } catch { setSaveError("Неверный ответ сервера: " + text.slice(0, 100)); return; }
+      if (!data.ok) { setSaveError((data.error as string) || "Ошибка сохранения"); return; }
+      const user = data.user as UserProfile;
+      setProfile(user);
+      onProfileUpdated({ id: user.id, name: user.name, email: user.email });
+      const saved = { ...JSON.parse(localStorage.getItem("cep-user") || "{}"), name: user.name };
       localStorage.setItem("cep-user", JSON.stringify(saved));
       setEditing(false);
-    } catch {
-      setSaveError("Нет соединения. Попробуй ещё раз.");
+    } catch (err) {
+      console.error("[profile save] error:", err);
+      setSaveError("Ошибка: " + String(err));
     } finally {
       setSaving(false);
     }
