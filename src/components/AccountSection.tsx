@@ -101,9 +101,9 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
       try {
         const dataUrl = reader.result as string;
         const base64 = dataUrl.split(",")[1];
-        const res = await fetch(UPLOAD_URL, {
+        const res = await fetch(`${UPLOAD_URL}?token=${token}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: base64, contentType: file.type }),
         });
         const data = await res.json();
