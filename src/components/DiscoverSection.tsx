@@ -46,18 +46,17 @@ export default function DiscoverSection({
   onOpenChat,
 }: DiscoverSectionProps) {
   const [allProfiles, setAllProfiles] = useState<Profile[]>(PROFILES);
+  const [distances, setDistances] = useState<Record<number, number>>({});
 
-  useEffect(() => {
-    const token = localStorage.getItem("cep-token");
-    if (!token) return;
-    fetch(USERS_URL, { headers: { "Authorization": `Bearer ${token}` } })
+  const loadUsers = (token: string) => {
+    fetch(`${USERS_URL}?token=${token}`)
       .then(r => r.json())
       .then(data => {
         if (data.users && data.users.length > 0) {
           const mapped: Profile[] = data.users.map((u: {
             id: number; name: string; age: number; city: string;
             about: string; interests: string[]; avatar_url: string;
-            verified: boolean; online: boolean; match: number;
+            verified: boolean; online: boolean; match: number; distance: number | null;
           }) => ({
             id: u.id,
             name: u.name,
@@ -71,9 +70,35 @@ export default function DiscoverSection({
             match: u.match,
           }));
           setAllProfiles([...mapped, ...PROFILES]);
+          const dist: Record<number, number> = {};
+          data.users.forEach((u: { id: number; distance: number | null }) => {
+            if (u.distance !== null && u.distance !== undefined) dist[u.id] = u.distance;
+          });
+          setDistances(dist);
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("cep-token");
+    if (!token) return;
+
+    // запрашиваем геолокацию и отправляем на сервер
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          fetch(`${USERS_URL}?token=${token}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          }).then(() => loadUsers(token)).catch(() => loadUsers(token));
+        },
+        () => loadUsers(token) // если отказали — грузим без геолокации
+      );
+    } else {
+      loadUsers(token);
+    }
   }, []);
 
   const filteredProfiles = allProfiles.filter(p => {
@@ -254,10 +279,14 @@ export default function DiscoverSection({
                       <div className="absolute bottom-[60px] right-3 w-3 h-3 bg-green-400 rounded-full border-2 border-card" />
                     )}
                     <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className="font-bold text-white">{profile.name}, {profile.age}</p>
+                      <p className="font-bold text-white">
+                        {profile.name}{profile.age ? `, ${profile.age}` : ""}
+                      </p>
                       <p className="text-white/70 text-xs flex items-center gap-1">
                         <Icon name="MapPin" size={10} />
-                        {profile.city}
+                        {distances[profile.id] !== undefined
+                          ? `${distances[profile.id]} км`
+                          : profile.city || ""}
                       </p>
                     </div>
                   </div>
