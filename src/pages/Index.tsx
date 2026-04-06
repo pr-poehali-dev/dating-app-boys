@@ -5,6 +5,7 @@ import { type Section, type Match, type Profile } from "@/components/data";
 import DiscoverSection from "@/components/DiscoverSection";
 import { MatchesSection, MessagesSection } from "@/components/MessagesSection";
 import { ProfileSection, SettingsSection, SupportSection } from "@/components/AccountSection";
+import Onboarding from "@/components/Onboarding";
 
 function Logo() {
   return (
@@ -25,6 +26,7 @@ function Logo() {
 }
 
 export default function Index() {
+  const [onboarded, setOnboarded] = useState(() => localStorage.getItem("cep-onboarded") === "1");
   const [section, setSection] = useState<Section>("discover");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [activeChat, setActiveChat] = useState<Match | null>(null);
@@ -50,6 +52,15 @@ export default function Index() {
     { key: "profile", icon: "User", label: "Профиль" },
     { key: "settings", icon: "Settings", label: "Настройки" },
   ];
+
+  const handleOnboardingDone = () => {
+    localStorage.setItem("cep-onboarded", "1");
+    setOnboarded(true);
+  };
+
+  if (!onboarded) {
+    return <Onboarding onDone={handleOnboardingDone} />;
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col" style={{ fontFamily: "'Golos Text', sans-serif" }}>
