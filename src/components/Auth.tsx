@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 
+const AUTH_URL = "https://functions.poehali.dev/34a2ed8d-b1a4-40c2-add7-f20e8cd3fed1";
+
 type AuthMode = "welcome" | "login" | "register";
 
 interface AuthProps {
-  onDone: () => void;
+  onDone: (user: { id: number; name: string; email: string }, token: string) => void;
 }
 
 export default function Auth({ onDone }: AuthProps) {
@@ -16,11 +18,54 @@ export default function Auth({ onDone }: AuthProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [exiting, setExiting] = useState(false);
 
-  const finish = () => {
+  const finish = (user: { id: number; name: string; email: string }, token: string) => {
     setExiting(true);
-    setTimeout(onDone, 400);
+    setTimeout(() => onDone(user, token), 400);
+  };
+
+  const handleRegister = async () => {
+    setError("");
+    if (!name.trim() || !email.trim() || !password) { setError("Заполни все поля"); return; }
+    if (password.length < 6) { setError("Пароль должен быть не менее 6 символов"); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "register", name: name.trim(), email: email.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) { setError(data.error || "Ошибка регистрации"); return; }
+      finish(data.user, data.token);
+    } catch {
+      setError("Нет соединения. Попробуй ещё раз.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    setError("");
+    if (!email.trim() || !password) { setError("Введи email и пароль"); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "login", email: email.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) { setError(data.error || "Ошибка входа"); return; }
+      finish(data.user, data.token);
+    } catch {
+      setError("Нет соединения. Попробуй ещё раз.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,7 +76,6 @@ export default function Auth({ onDone }: AuthProps) {
       )}
       style={{ fontFamily: "'Golos Text', sans-serif" }}
     >
-      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-spark-pink/10 via-background to-background pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-spark-purple/10 blur-3xl pointer-events-none" />
 
@@ -156,13 +200,20 @@ export default function Auth({ onDone }: AuthProps) {
           </div>
         )}
 
+        {/* Error */}
+        {error && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-2xl px-4 py-3 text-sm text-destructive animate-fade-in">
+            {error}
+          </div>
+        )}
+
         {/* Bottom actions */}
         <div className="space-y-3">
           {mode === "welcome" && (
             <>
               <Button
                 onClick={() => setMode("register")}
-                className="w-full h-13 gradient-spark border-0 text-white font-bold rounded-2xl text-base hover:opacity-90"
+                className="w-full gradient-spark border-0 text-white font-bold rounded-2xl text-base hover:opacity-90"
                 style={{ height: 52 }}
               >
                 Создать аккаунт
@@ -175,15 +226,11 @@ export default function Auth({ onDone }: AuthProps) {
               >
                 Войти
               </Button>
-
-              {/* Divider */}
               <div className="flex items-center gap-3 py-1">
                 <div className="flex-1 h-px bg-border" />
                 <span className="text-xs text-muted-foreground">или войди через</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
-
-              {/* Social */}
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: "Google", icon: "Globe" },
@@ -204,14 +251,15 @@ export default function Auth({ onDone }: AuthProps) {
           {mode === "login" && (
             <>
               <Button
-                onClick={finish}
-                className="w-full gradient-spark border-0 text-white font-bold rounded-2xl hover:opacity-90"
+                onClick={handleLogin}
+                disabled={loading}
+                className="w-full gradient-spark border-0 text-white font-bold rounded-2xl hover:opacity-90 disabled:opacity-60"
                 style={{ height: 52 }}
               >
-                Войти
+                {loading ? "Входим..." : "Войти"}
               </Button>
               <button
-                onClick={() => setMode("welcome")}
+                onClick={() => { setMode("welcome"); setError(""); }}
                 className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
               >
                 <Icon name="ArrowLeft" size={15} />
@@ -223,14 +271,15 @@ export default function Auth({ onDone }: AuthProps) {
           {mode === "register" && (
             <>
               <Button
-                onClick={finish}
-                className="w-full gradient-spark border-0 text-white font-bold rounded-2xl hover:opacity-90"
+                onClick={handleRegister}
+                disabled={loading}
+                className="w-full gradient-spark border-0 text-white font-bold rounded-2xl hover:opacity-90 disabled:opacity-60"
                 style={{ height: 52 }}
               >
-                Зарегистрироваться
+                {loading ? "Создаём аккаунт..." : "Зарегистрироваться"}
               </Button>
               <button
-                onClick={() => setMode("welcome")}
+                onClick={() => { setMode("welcome"); setError(""); }}
                 className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
               >
                 <Icon name="ArrowLeft" size={15} />

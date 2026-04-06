@@ -28,7 +28,11 @@ function Logo() {
 
 export default function Index() {
   const [onboarded, setOnboarded] = useState(() => localStorage.getItem("cep-onboarded") === "1");
-  const [authed, setAuthed] = useState(() => localStorage.getItem("cep-authed") === "1");
+  const [authed, setAuthed] = useState(() => !!localStorage.getItem("cep-token"));
+  const [currentUser, setCurrentUser] = useState<{ id: number; name: string; email: string } | null>(() => {
+    const u = localStorage.getItem("cep-user");
+    return u ? JSON.parse(u) : null;
+  });
   const [section, setSection] = useState<Section>("discover");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [activeChat, setActiveChat] = useState<Match | null>(null);
@@ -60,8 +64,10 @@ export default function Index() {
     setOnboarded(true);
   };
 
-  const handleAuthDone = () => {
-    localStorage.setItem("cep-authed", "1");
+  const handleAuthDone = (user: { id: number; name: string; email: string }, token: string) => {
+    localStorage.setItem("cep-token", token);
+    localStorage.setItem("cep-user", JSON.stringify(user));
+    setCurrentUser(user);
     setAuthed(true);
   };
 
