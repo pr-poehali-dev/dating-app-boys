@@ -38,13 +38,12 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
   useEffect(() => {
     const token = localStorage.getItem("cep-token");
     if (!token) return;
-    fetch(PROFILE_URL, { headers: { "Authorization": `Bearer ${token}` } })
+    fetch(`${PROFILE_URL}?token=${token}`)
       .then(r => r.json())
       .then(data => {
-        console.log("[profile] response:", data);
         if (data.id) setProfile(data);
       })
-      .catch(err => console.error("[profile] fetch error:", err));
+      .catch(() => {});
   }, []);
 
   const openEdit = () => {
@@ -64,9 +63,9 @@ export function ProfileSection({ likedProfiles, currentUser, onProfileUpdated }:
     setSaving(true);
     const token = localStorage.getItem("cep-token");
     try {
-      const res = await fetch(PROFILE_URL, {
+      const res = await fetch(`${PROFILE_URL}?token=${token}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editName.trim(), city: editCity.trim(),
           about: editAbout.trim(), age: parseInt(editAge) || 0,

@@ -23,6 +23,8 @@ def handler(event: dict, context) -> dict:
 
     token = (event.get("headers") or {}).get("X-Authorization", "").replace("Bearer ", "")
     if not token:
+        token = (event.get("queryStringParameters") or {}).get("token", "")
+    if not token:
         return {"statusCode": 401, "headers": cors, "body": json.dumps({"error": "Не авторизован"})}
 
     conn = get_conn()
